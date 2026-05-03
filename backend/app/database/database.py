@@ -25,9 +25,18 @@ from app.database.models import (
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./stem_theory_bot.db")
+# Railway / Heroku-style DATABASE_URL ships with the legacy `postgres://`
+# prefix that SQLAlchemy 2.x rejects.
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://") :]
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args, future=True)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    future=True,
+    pool_pre_ping=True,
+)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
