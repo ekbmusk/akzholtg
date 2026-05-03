@@ -13,8 +13,14 @@ from config import BOT_TOKEN, assert_runtime_config
 from handlers import all_routers
 
 
+_RAW_LEVEL = (os.getenv("LOG_LEVEL") or "INFO").upper()
+_LEVEL = getattr(logging, _RAW_LEVEL, None)
+if not isinstance(_LEVEL, int):
+    # Hosting providers occasionally inject non-standard values (e.g. "1");
+    # fall back rather than crashing the worker on startup.
+    _LEVEL = logging.INFO
 logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO"),
+    level=_LEVEL,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 logger = logging.getLogger(__name__)

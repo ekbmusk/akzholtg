@@ -11,8 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
+_RAW_LEVEL = (os.getenv("LOG_LEVEL") or "INFO").upper()
+_LEVEL = getattr(logging, _RAW_LEVEL, None)
+if not isinstance(_LEVEL, int):
+    _LEVEL = logging.INFO
 logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO"),
+    level=_LEVEL,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 
