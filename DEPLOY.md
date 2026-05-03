@@ -1,127 +1,145 @@
-# Deploy — Cloudflare Pages + Railway
-
-All three services + Postgres in a single Railway project, frontend on
-Cloudflare Pages.
+# Deploy — Vercel (frontend) + Railway (backend + bot)
 
 ```
-┌─ Railway project ────────────────────────────────┐
-│  ┌──────────┐    ┌──────────┐    ┌────────────┐  │
-│  │ backend  │───▶│ Postgres │◀───│   bot      │  │
-│  │ :PORT    │    │ internal │    │ long-poll  │  │
-│  └────┬─────┘    └──────────┘    └────────────┘  │
-└───────┼──────────────────────────────────────────┘
-        ▼
-   Cloudflare Pages (static React, hits backend public URL)
-        ▲
-        │ X-Telegram-Init-Data
+┌─ Railway project ───────────────────────────────────────┐
+│  ┌──────────────────┐                ┌──────────────┐   │
+│  │ backend (Docker) │◀───────────────│ bot (Docker) │   │
+│  │  :$PORT          │  internal URL  │ long-poll    │   │
+│  │  + volume /data  │                └──────────────┘   │
+│  └────────┬─────────┘                                   │
+└───────────┼─────────────────────────────────────────────┘
+            ▼  https://<backend>.up.railway.app
+   Vercel (static React, calls backend via VITE_API_URL)
+            ▲
+            │ X-Telegram-Init-Data
    Telegram Mini App  (BotFather → Configure Mini App)
 ```
 
-## 1. Railway
+## 0. Generate shared secrets first
 
-1. https://railway.app → **New Project** → **Deploy from GitHub** → `ekbmusk/stembot`.
-2. **Service: backend**
-   - Root directory: `/backend`
-   - Settings → Networking → **Generate Domain**
-3. **+ Add Service** → **GitHub Repo** → same repo → **Service: bot**
-   - Root directory: `/bot`
-   - No public domain needed.
-4. **+ Add Service** → **Database** → **PostgreSQL** (one-click template).
-   The service is named `Postgres` and exposes `DATABASE_URL` internally.
-5. Project-level **Variables** (shared by backend + bot):
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+This value goes into both backend and bot as `INTERNAL_BOT_TOKEN`.
+
+## 1. Backend on Railway
+
+1. Railway → **New Project** → **Deploy from GitHub repo** → pick this repo.
+2. After the first detection, open the service:
+   - **Settings → Source → Root Directory** = `backend`
+   - Builder = **Dockerfile** (auto-detected from `backend/Dockerfile`).
+3. **Settings → Networking → Generate Domain** to get the public URL.
+4. **Settings → Volumes → New Volume**, mount path `/data` (≥ 1 GB). This
+   keeps SQLite + uploaded images alive across redeploys.
+5. **Variables**:
    ```
-   BOT_TOKEN=<from BotFather>
+   BOT_TOKEN=<from @BotFather>
    TELEGRAM_BOT_TOKEN=<same as BOT_TOKEN>
-   INTERNAL_BOT_TOKEN=<random 32-char secret>
-   GROQ_API_KEY=<from groq.com>
-   TEACHER_TELEGRAM_IDS=<your TG id>
-   MINI_APP_URL=<placeholder, replaced after step 3>
+   INTERNAL_BOT_TOKEN=<the secret from step 0>
+   AUTHOR_TELEGRAM_IDS=<comma-separated Telegram user IDs>
+   MINI_APP_URL=<placeholder — overwritten in step 3>
+   DATABASE_URL=sqlite:////data/stem_theory_bot.db
+   UPLOAD_DIR=/data/uploads
+   GROQ_API_KEY=<optional — only if AI explanations are enabled>
    ```
-6. **backend** service-only var (uses Railway's reference variable so the URL
-   tracks any Postgres re-provisioning):
-   ```
-   DATABASE_URL=${{ Postgres.DATABASE_URL }}
-   ```
-7. **bot** service-only var:
-   ```
-   BACKEND_URL=https://<backend-public-domain>.up.railway.app
-   ```
-8. Deploy all three services. On first boot, backend runs SQLAlchemy
-   `create_all` against Postgres and seeds the 26-case catalogue from
-   `backend/seeds/cases.json`.
-9. Sanity check:
-   ```
-   curl https://<backend>.up.railway.app/api/health
-   # {"status":"ok"}
-   ```
+   `PORT` is injected by Railway — **do not set it manually**.
 
-## 2. Cloudflare Pages
+Sanity:
+```
+curl https://<backend>.up.railway.app/api/health
+# {"status":"ok"}
+```
 
-1. Cloudflare dashboard → Workers & Pages → **Create** → Pages →
-   **Connect to Git** → `ekbmusk/stembot`.
-2. Build settings:
-   - Framework preset: **None**
-   - Build command: `cd frontend && npm install && npm run build`
-   - Build output directory: `frontend/dist`
-3. Environment variables (Production):
+On first boot the backend runs `Base.metadata.create_all`, lightweight ALTER
+migrations, and seeds default subjects + 21 lessons (3 baseline + 18 lab
+projects from `Zertkhanalyk_Zhumystar/`). Cover images for the labs come from
+`backend/uploads/lesson-images/zertkhana_*.png` baked into the Docker image
+and copied to the volume on first request (or by re-running
+`scripts/build_zertkhana_seed.py` against a checked-out copy).
+
+## 2. Frontend on Vercel
+
+1. Vercel → **Add New… → Project** → import the same GitHub repo.
+2. Configure:
+   - **Root Directory** = `frontend`
+   - Framework Preset = **Vite** (auto-detected via `frontend/vercel.json`)
+   - Build Command, Install Command, Output Directory — auto-filled.
+3. **Environment Variables** (Production + Preview):
    ```
    VITE_API_URL=https://<backend>.up.railway.app/api
    ```
-4. Save & deploy. First build ≈ 2 min. Note the public URL
-   (`https://<project>.pages.dev`).
+   The frontend prepends this origin to relative `/api/uploads/...` image
+   URLs via `src/lib/imageUrl.js`, so cover and inline images load correctly
+   from Railway. Don't drop the `/api` suffix — axios uses the whole value.
+4. **Deploy**. Vercel returns `https://<project>.vercel.app`.
 
 ## 3. Wire MINI_APP_URL back
 
-Railway → project Variables → `MINI_APP_URL=https://<project>.pages.dev`.
-Both backend and bot redeploy automatically.
+Set `MINI_APP_URL=https://<project>.vercel.app` on the backend (and bot)
+Railway services. Both redeploy automatically.
 
-## 4. BotFather
+## 4. Bot on Railway (same project)
+
+1. Railway → project → **+ New → GitHub Repo** → same repo, second service.
+2. **Settings → Source → Root Directory** = `bot`. Builder = Dockerfile.
+3. **Variables**:
+   ```
+   BOT_TOKEN=<same as backend>
+   TELEGRAM_BOT_TOKEN=<same as backend>
+   INTERNAL_BOT_TOKEN=<same as backend>
+   MINI_APP_URL=https://<project>.vercel.app
+   BACKEND_URL=http://<backend-service-name>.railway.internal:${PORT}
+   ```
+   `BACKEND_URL` uses Railway's private networking — copy the internal
+   hostname from the backend service's **Networking → Private** panel.
+   Falling back to the public `https://<backend>.up.railway.app` also works
+   if private networking is disabled.
+4. The bot has no public domain — no need to expose a port.
+
+## 5. BotFather
 
 In Telegram → @BotFather:
 
 1. `/mybots` → pick the bot → **Bot Settings** → **Configure Mini App** →
-   **Enable Mini App** → enter the Cloudflare Pages URL.
-2. (Optional) `/setmenubutton` → set "Кейстерді ашу" + same URL → adds the
+   **Enable Mini App** → enter the Vercel URL.
+2. (Optional) `/setmenubutton` → "Кітапхананы ашу" + same URL → adds the
    blue Mini App button to the chat input area.
 
-## 5. Smoke test
+## 6. Smoke test
 
 1. `/start` in Telegram → welcome + Mini App button.
-2. Tap → app opens inside Telegram, you're auto-registered.
-3. Open a case → preview → Бастау → answer → Тапсыру → AI grades on the spot.
-4. As teacher (your TG id in `TEACHER_TELEGRAM_IDS`): bottom nav switches to
-   teacher tabs, dashboard / submissions / case editor are accessible.
+2. Tap → app opens inside Telegram, auto-registered as student.
+3. Library lists 21 lessons; lab covers load (otherwise `VITE_API_URL` is
+   misconfigured or volume mount is missing).
+4. Open a lesson → reads through blocks → "Сабақты аяқтадым" marks completion.
+5. Add to favourites → opens in `/favourites`.
+6. As author (your TG id in `AUTHOR_TELEGRAM_IDS`): bottom nav switches to
+   author tabs — Dashboard / Lessons / Broadcast.
 
-## Persistence matrix
+## Local dev
 
-| | Where | Survives redeploy | Backed up |
-|---|---|---|---|
-| Users, submissions, answers, AI feedback, groups | Railway Postgres | ✓ | manual snapshot from Railway dashboard |
-| Seeded cases | re-seeded on boot from `seeds/cases.json` | ✓ (idempotent) | irrelevant — in git |
-| Cover images | `frontend/public/cases/...` baked into CF Pages build | ✓ | irrelevant — in git |
-| `backend/uploads/` (file_upload task answers) | container disk | ✗ wipes on redeploy | ✗ |
+```
+cd backend && uvicorn main:app --reload --port 8001
+cd frontend && npm run dev   # :3001 → /api proxied to :8001
+cd bot && python main.py
+```
 
-`uploads/` is ephemeral — none of the 26 seeded cases use a `file_upload`
-task. If you later add a case that asks the student to upload a photo/PDF,
-plan to wire it to Cloudflare R2 (10 GB free) before shipping.
+Or `docker compose up --build` (frontend :3001, backend :8001).
 
-For real backups of Postgres, schedule a periodic `pg_dump` cron service in
-Railway that uploads to R2 / S3. Railway's built-in snapshot feature works
-but is manual.
+## Troubleshooting
 
-## Local dev unchanged
-
-`docker compose up` keeps using SQLite (`sqlite:///./stem_case_bot.db`) and a
-local `backend/uploads/` dir. Postgres only kicks in when `DATABASE_URL` is a
-`postgresql://` value (in production).
-
-## Alternative: Neon Postgres
-
-If you don't want Railway Postgres on the bill (it counts against your
-Railway usage), point `DATABASE_URL` at a free [Neon](https://neon.tech)
-project instead — same env var, no code change. Neon's free tier gives 0.5 GB
-storage + 24h PITR backups + auto-suspend after 5 min idle.
-
-If you go Neon, also bump `NOTIFIER_INTERVAL_SEC=300` on the **bot** service —
-the default 30s polling would keep Neon's compute warm 24/7 and burn through
-the 190 free compute hours fast.
+- **Lab covers 404 on prod** — `VITE_API_URL` not set in Vercel, or you
+  dropped the `/api` suffix. The frontend strips that suffix internally to
+  build image origins; without it relative URLs stay relative and 404 on
+  vercel.app. Fix: redeploy with `VITE_API_URL=https://<backend>/api`.
+- **Lessons disappear after redeploy** — Volume not mounted on the backend
+  service, so the SQLite file lived inside the ephemeral container. Add the
+  volume at `/data` and re-set `DATABASE_URL=sqlite:////data/stem_theory_bot.db`
+  + `UPLOAD_DIR=/data/uploads`.
+- **Bot can't reach backend** — `BACKEND_URL` points at the public domain
+  but Railway private networking is on, or vice versa. Check the **Network**
+  tab and use the matching host.
+- **`Author access required` for an admin Telegram ID** — `AUTHOR_TELEGRAM_IDS`
+  is missing, comma-separated wrong, or the user authenticated before the
+  variable was set; have them reopen the Mini App.

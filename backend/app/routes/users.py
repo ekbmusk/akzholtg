@@ -15,7 +15,7 @@ from app.database.models import User
 from app.schemas.user import TelegramUserIn, UserOut
 from app.utils.auth import (
     get_current_user,
-    is_teacher,
+    is_author,
     parse_init_data,
 )
 
@@ -58,7 +58,7 @@ def register(
 ):
     tg = _resolve_telegram_user(x_telegram_init_data, payload.user)
     user = db.query(User).filter(User.telegram_id == tg.id).first()
-    desired_role = "teacher" if is_teacher(tg.id) else "student"
+    desired_role = "author" if is_author(tg.id) else "student"
 
     if user is None:
         user = User(
@@ -77,7 +77,7 @@ def register(
         user.username = tg.username or user.username
         user.language_code = tg.language_code or user.language_code
         user.photo_url = tg.photo_url or user.photo_url
-        # Role can be promoted/demoted between visits as TEACHER_TELEGRAM_IDS changes.
+        # Role can be promoted/demoted between visits as AUTHOR_TELEGRAM_IDS changes.
         user.role = desired_role
 
     db.commit()

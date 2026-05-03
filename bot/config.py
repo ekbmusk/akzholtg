@@ -19,7 +19,7 @@ def _required(name: str) -> str:
 # Telegram — accept either name; BOT_TOKEN takes precedence.
 BOT_TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or ""
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000").rstrip("/")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8001").rstrip("/")
 INTERNAL_BOT_TOKEN = os.getenv("INTERNAL_BOT_TOKEN", "")
 MINI_APP_URL = os.getenv("MINI_APP_URL", "")
 

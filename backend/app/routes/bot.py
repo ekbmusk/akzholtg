@@ -1,27 +1,18 @@
 """Internal endpoints used by the bot process. Auth: X-Bot-Token shared secret."""
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.database.models import (
-    CaseAssignment,
-    CaseSubmission,
+    Lesson,
+    LessonFavourite,
+    LessonProgress,
     Notification,
-    STEMCase,
     User,
 )
-from app.schemas.bot import (
-    BotAssignedCaseItem,
-    BotNotification,
-    BotSubmissionItem,
-    BotUserOut,
-)
-from app.services.case_service import list_assigned_cases
+from app.schemas.bot import BotLessonItem, BotNotification, BotUserOut
 from app.utils.auth import require_bot_token
 
 router = APIRouter(
@@ -39,67 +30,75 @@ def get_user_by_telegram(telegram_id: int, db: Session = Depends(get_db)):
     return user
 
 
-@router.get(
-    "/users/{user_id}/submissions",
-    response_model=list[BotSubmissionItem],
-)
-def get_user_submissions(
-    user_id: int,
-    status: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-):
-    q = (
-        db.query(CaseSubmission, STEMCase.title_kk)
-        .join(STEMCase, STEMCase.id == CaseSubmission.case_id)
-        .filter(CaseSubmission.user_id == user_id)
+@router.get("/users/{user_id}/progress", response_model=list[BotLessonItem])
+def get_user_progress(user_id: int, db: Session = Depends(get_db)):
+    rows = (
+        db.query(LessonProgress, Lesson)
+        .join(Lesson, Lesson.id == LessonProgress.lesson_id)
+        .filter(LessonProgress.user_id == user_id)
+        .order_by(LessonProgress.updated_at.desc())
+        .all()
     )
-    if status:
-        q = q.filter(CaseSubmission.status == status)
-    rows = q.order_by(CaseSubmission.started_at.desc()).all()
+    fav_ids = {
+        f.lesson_id
+        for f in db.query(LessonFavourite)
+        .filter(LessonFavourite.user_id == user_id)
+        .all()
+    }
     return [
-        BotSubmissionItem(
-            submission_id=s.id,
-            case_id=s.case_id,
-            case_title=title,
-            status=s.status,
-            total_score=s.total_score,
-            submitted_at=s.submitted_at,
+        BotLessonItem(
+            lesson_id=l.id,
+            title_kk=l.title_kk,
+            subject_code=l.subject_code,
+            difficulty=l.difficulty,
+            estimated_minutes=l.estimated_minutes,
+            status=p.status,
+            is_favourite=l.id in fav_ids,
         )
-        for s, title in rows
+        for p, l in rows
     ]
 
 
-@router.get(
-    "/users/{user_id}/assigned-cases",
-    response_model=list[BotAssignedCaseItem],
-)
-def get_user_assigned_cases(user_id: int, db: Session = Depends(get_db)):
-    cases = list_assigned_cases(db, user_id)
-    # Pick the earliest due_at across the user's group assignments per case.
-    due_map: dict[int, Optional[datetime]] = {}
-    if cases:
-        case_ids = [c.id for c in cases]
-        rows = (
-            db.query(CaseAssignment.case_id, CaseAssignment.due_at)
-            .filter(CaseAssignment.case_id.in_(case_ids))
-            .all()
-        )
-        for cid, due in rows:
-            current = due_map.get(cid)
-            if due is None:
-                continue
-            if current is None or due < current:
-                due_map[cid] = due
-
+@router.get("/users/{user_id}/favourites", response_model=list[BotLessonItem])
+def get_user_favourites(user_id: int, db: Session = Depends(get_db)):
+    rows = (
+        db.query(LessonFavourite, Lesson)
+        .join(Lesson, Lesson.id == LessonFavourite.lesson_id)
+        .filter(LessonFavourite.user_id == user_id)
+        .order_by(LessonFavourite.created_at.desc())
+        .all()
+    )
     return [
-        BotAssignedCaseItem(
-            case_id=c.id,
-            title_kk=c.title_kk,
-            subject=c.subject,
-            difficulty=c.difficulty,
-            due_at=due_map.get(c.id),
+        BotLessonItem(
+            lesson_id=l.id,
+            title_kk=l.title_kk,
+            subject_code=l.subject_code,
+            difficulty=l.difficulty,
+            estimated_minutes=l.estimated_minutes,
+            is_favourite=True,
         )
-        for c in cases
+        for _, l in rows
+    ]
+
+
+@router.get("/lessons/featured", response_model=list[BotLessonItem])
+def featured(limit: int = Query(5, ge=1, le=20), db: Session = Depends(get_db)):
+    rows = (
+        db.query(Lesson)
+        .filter(Lesson.is_published.is_(True), Lesson.is_featured.is_(True))
+        .order_by(Lesson.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        BotLessonItem(
+            lesson_id=l.id,
+            title_kk=l.title_kk,
+            subject_code=l.subject_code,
+            difficulty=l.difficulty,
+            estimated_minutes=l.estimated_minutes,
+        )
+        for l in rows
     ]
 
 

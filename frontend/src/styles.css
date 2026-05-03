@@ -1,8 +1,13 @@
 @import 'katex/dist/katex.min.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --reading-font-size: 17px;
+}
 
 @layer base {
   html {
@@ -16,56 +21,36 @@
   }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
-    /* Telegram inserts the keyboard above content; don't fight it. */
     overscroll-behavior-y: none;
   }
   ::selection {
-    background: rgba(108, 99, 255, 0.35);
+    background: rgba(20, 184, 166, 0.35);
   }
   input,
   textarea {
     font-family: inherit;
   }
-  /* Hide number input spinners — we render our own steppers when needed. */
-  input[type='number']::-webkit-outer-spin-button,
-  input[type='number']::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type='number'] {
-    -moz-appearance: textfield;
-  }
 }
 
 @layer components {
   .container-app {
-    @apply mx-auto w-full max-w-[480px] px-4;
+    @apply mx-auto w-full max-w-[520px] px-4;
+  }
+  .container-reading {
+    @apply mx-auto w-full max-w-[640px] px-5;
   }
   .hairline {
     @apply border-t border-border;
   }
-  /* The "atmosphere" — a faint dotted grid so flat surfaces breathe. */
+  /* Soft warm backdrop — slightly lighter than stem-bot's purple atmosphere. */
   .atmosphere {
     background-image:
-      radial-gradient(60% 50% at 50% 0%, rgba(108, 99, 255, 0.10), transparent 70%),
-      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.035) 1px, transparent 0);
+      radial-gradient(70% 50% at 50% 0%, rgba(20, 184, 166, 0.08), transparent 65%),
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.025) 1px, transparent 0);
     background-size: auto, 22px 22px;
-  }
-  /* Soft top-right accent fill for "sticker-like" cards.
-     Reads var(--subject) so a single utility serves every topic colour. */
-  .sticker-glow {
-    background-image:
-      radial-gradient(80% 100% at 100% 0%, color-mix(in oklab, var(--subject, #6C63FF) 18%, transparent), transparent 60%);
-  }
-  .ring-subject {
-    box-shadow: inset 0 0 0 1px var(--subject, theme('colors.primary.DEFAULT'));
   }
   .label-eyebrow {
     @apply font-mono uppercase tracking-ticker text-[10px] text-ink-muted;
-  }
-  .num-badge {
-    @apply inline-flex h-7 min-w-[28px] items-center justify-center rounded-full border border-border bg-surface-2 px-2 font-mono text-[12px] tabular-nums text-ink;
   }
   .skeleton {
     background: linear-gradient(
@@ -77,43 +62,37 @@
     background-size: 200% 100%;
     @apply animate-shimmer rounded-md;
   }
+  /* Reading-optimised body container. */
+  .lesson-prose {
+    font-family: theme('fontFamily.serif');
+    font-size: var(--reading-font-size);
+    line-height: 1.75;
+    color: theme('colors.ink.DEFAULT');
+  }
+  .lesson-prose p + p {
+    margin-top: 1.1em;
+  }
+  .fact-callout {
+    @apply rounded-2xl border border-accent/30 bg-accent/[0.06] p-4 text-[15px] leading-relaxed;
+  }
+  .quote-block {
+    @apply border-l-2 border-primary/60 pl-4 italic text-ink-muted;
+  }
 }
 
-/* KaTeX — calm down its default white-on-white assumptions. */
 .katex {
-  color: rgba(255, 255, 255, 0.95);
+  color: theme('colors.ink.DEFAULT');
   font-size: 1em;
 }
 .katex-display {
   margin: 0;
   padding: 0;
 }
-.formula-glow {
-  background: radial-gradient(
-    120% 100% at 50% 50%,
-    rgba(108, 99, 255, 0.12),
-    transparent 70%
-  );
-}
 
-/* Lucide — enforce single stroke style across the app. */
 .lucide {
-  stroke-width: 1.5;
+  stroke-width: 1.6;
 }
 
-/* Splash curtain — endless STEM marquee. Two adjacent identical spans inside
-   each row sit edge-to-edge; translate-X by -50% slides the first copy off
-   exactly when the second copy fills its place — seamless loop. */
-@keyframes curtain-left {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-50%, 0, 0); }
-}
-@keyframes curtain-right {
-  from { transform: translate3d(-50%, 0, 0); }
-  to   { transform: translate3d(0, 0, 0); }
-}
-
-/* Honour user's motion preference everywhere. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

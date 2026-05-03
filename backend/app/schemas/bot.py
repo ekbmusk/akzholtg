@@ -15,21 +15,14 @@ class BotUserOut(BaseModel):
     role: str
 
 
-class BotSubmissionItem(BaseModel):
-    submission_id: int
-    case_id: int
-    case_title: Optional[str] = None
-    status: str
-    total_score: Optional[float] = None
-    submitted_at: Optional[datetime] = None
-
-
-class BotAssignedCaseItem(BaseModel):
-    case_id: int
+class BotLessonItem(BaseModel):
+    lesson_id: int
     title_kk: str
-    subject: str
+    subject_code: str
     difficulty: str
-    due_at: Optional[datetime] = None
+    estimated_minutes: Optional[int] = None
+    status: Optional[str] = None  # progress status: opened|in_progress|completed
+    is_favourite: bool = False
 
 
 class BotNotification(BaseModel):

@@ -1,11 +1,12 @@
 import {
+  BookMarked,
   BookOpen,
-  Home,
+  Compass,
+  Heart,
+  History,
   LayoutDashboard,
   MessageSquare,
   Notebook,
-  User,
-  Users,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -13,19 +14,19 @@ import { cn } from '../../lib/cn';
 import { haptic } from '../../lib/telegram';
 
 const studentTabs = [
-  { to: '/home', label: 'Басты', icon: Home },
-  { to: '/cases', label: 'Кейстер', icon: BookOpen },
-  { to: '/me', label: 'Профиль', icon: User },
+  { to: '/library', label: 'Кітапхана', icon: Compass },
+  { to: '/favourites', label: 'Таңдаулы', icon: Heart },
+  { to: '/history', label: 'Тарих', icon: History },
 ];
 
-const teacherTabs = [
-  { to: '/teacher/dashboard', label: 'Шолу', icon: LayoutDashboard },
-  { to: '/teacher/cases', label: 'Кейстер', icon: Notebook },
-  { to: '/teacher/broadcast', label: 'Хабар', icon: MessageSquare },
+const authorTabs = [
+  { to: '/author/dashboard', label: 'Шолу', icon: LayoutDashboard },
+  { to: '/author/lessons', label: 'Сабақтар', icon: Notebook },
+  { to: '/author/broadcast', label: 'Хабар', icon: MessageSquare },
 ];
 
 export function BottomNav({ role }) {
-  const tabs = role === 'teacher' ? teacherTabs : studentTabs;
+  const tabs = role === 'author' ? authorTabs : studentTabs;
   return (
     <nav
       className="sticky bottom-0 z-30 -mx-4 mt-6 border-t border-border bg-bg/85 backdrop-blur-md"
@@ -50,7 +51,7 @@ export function BottomNav({ role }) {
                     className={cn(
                       'flex h-7 w-7 items-center justify-center rounded-full transition',
                       isActive
-                        ? 'bg-primary/15 text-primary-soft'
+                        ? 'bg-primary/20 text-primary-soft'
                         : 'text-current',
                     )}
                   >

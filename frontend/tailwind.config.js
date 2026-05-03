@@ -5,27 +5,30 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0F0F1A',
-        'bg-deep': '#08091A',
-        surface: '#1A1A2E',
-        'surface-2': '#22243F',
-        'surface-3': '#2D305A',
+        bg: '#0B1320',
+        'bg-deep': '#070C16',
+        surface: '#1E2A3A',
+        'surface-2': '#243446',
+        'surface-3': '#2E4053',
         border: 'rgba(255, 255, 255, 0.06)',
         'border-strong': 'rgba(255, 255, 255, 0.12)',
         primary: {
-          DEFAULT: '#6C63FF',
-          soft: '#8B82FF',
-          dim: '#4F46C5',
+          DEFAULT: '#14B8A6',
+          soft: '#5EEAD4',
+          dim: '#0F766E',
+        },
+        accent: {
+          DEFAULT: '#F59E0B',
+          soft: '#FCD34D',
         },
         ink: {
-          DEFAULT: 'rgba(255, 255, 255, 0.92)',
-          muted: 'rgba(255, 255, 255, 0.62)',
-          faint: 'rgba(255, 255, 255, 0.38)',
+          DEFAULT: '#E2E8F0',
+          muted: '#94A3B8',
+          faint: '#64748B',
         },
         success: '#34D399',
         warn: '#FBBF24',
         danger: '#F87171',
-        // Subject accents — surface as ring/border highlights, not fills.
         physics: '#4FD1C5',
         chemistry: '#A3E635',
         biology: '#34D399',
@@ -38,8 +41,8 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Unbounded', 'Inter', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        serif: ['Lora', 'Georgia', 'serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       letterSpacing: {
         tightest: '-0.04em',
@@ -50,7 +53,7 @@ export default {
         '3xl': '28px',
       },
       boxShadow: {
-        glow: '0 0 0 1px rgba(108, 99, 255, 0.35), 0 12px 40px -12px rgba(108, 99, 255, 0.5)',
+        glow: '0 0 0 1px rgba(20, 184, 166, 0.30), 0 12px 40px -12px rgba(20, 184, 166, 0.45)',
         soft: '0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 12px 40px -24px rgba(0, 0, 0, 0.6)',
       },
       keyframes: {
@@ -66,26 +69,18 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
-        'breath-pulse': {
-          '0%, 100%': { opacity: '0.85' },
-          '50%': { opacity: '1' },
-        },
-        'pop-in': {
-          '0%': { opacity: 0, transform: 'scale(0.7)' },
-          '60%': { opacity: 1, transform: 'scale(1.06)' },
-          '100%': { opacity: 1, transform: 'scale(1)' },
-        },
       },
       animation: {
         'fade-up': 'fade-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both',
         'fade-in': 'fade-in 200ms ease-out both',
         shimmer: 'shimmer 1.6s linear infinite',
-        'breath-pulse': 'breath-pulse 4s ease-in-out infinite',
-        'pop-in': 'pop-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
       },
-      backgroundImage: {
-        'grid-faint':
-          'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0)',
+      typography: {
+        DEFAULT: {
+          css: {
+            color: '#E2E8F0',
+          },
+        },
       },
     },
   },

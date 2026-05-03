@@ -1,8 +1,8 @@
 """Telegram-initData based auth.
 
 Per CLAUDE.md, the backend trusts the X-Telegram-Init-Data header without
-verifying its HMAC signature. The teacher role is decided server-side by
-matching the Telegram user ID against TEACHER_TELEGRAM_IDS.
+verifying its HMAC signature. The author role is decided server-side by
+matching the Telegram user ID against AUTHOR_TELEGRAM_IDS.
 """
 from __future__ import annotations
 
@@ -22,10 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 def parse_init_data(init_data: str) -> dict:
-    """Parse the Telegram WebApp initData query string into a dict.
-
-    The `user` field is JSON-decoded; other fields are returned as raw strings.
-    """
     if not init_data:
         return {}
     parsed = dict(parse_qsl(init_data, keep_blank_values=True))
@@ -39,8 +35,8 @@ def parse_init_data(init_data: str) -> dict:
     return parsed
 
 
-def get_teacher_ids() -> set[int]:
-    raw = os.getenv("TEACHER_TELEGRAM_IDS", "")
+def get_author_ids() -> set[int]:
+    raw = os.getenv("AUTHOR_TELEGRAM_IDS", "") or os.getenv("TEACHER_TELEGRAM_IDS", "")
     out: set[int] = set()
     for part in raw.split(","):
         part = part.strip()
@@ -49,12 +45,12 @@ def get_teacher_ids() -> set[int]:
         try:
             out.add(int(part))
         except ValueError:
-            logger.warning("Invalid teacher Telegram ID: %s", part)
+            logger.warning("Invalid author Telegram ID: %s", part)
     return out
 
 
-def is_teacher(telegram_id: int) -> bool:
-    return telegram_id in get_teacher_ids()
+def is_author(telegram_id: int) -> bool:
+    return telegram_id in get_author_ids()
 
 
 def get_current_user(
@@ -78,11 +74,11 @@ def get_current_user(
     return user
 
 
-def require_teacher(user: User = Depends(get_current_user)) -> User:
-    if user.role != "teacher":
+def require_author(user: User = Depends(get_current_user)) -> User:
+    if user.role != "author":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Teacher access required",
+            detail="Author access required",
         )
     return user
 
@@ -90,7 +86,6 @@ def require_teacher(user: User = Depends(get_current_user)) -> User:
 def require_bot_token(
     x_bot_token: Optional[str] = Header(None, alias="X-Bot-Token"),
 ) -> None:
-    """Auth for internal /api/bot/* endpoints — shared secret with the bot process."""
     expected = os.getenv("INTERNAL_BOT_TOKEN")
     if not expected:
         raise HTTPException(

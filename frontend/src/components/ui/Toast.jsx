@@ -7,6 +7,8 @@ const tones = {
     'bg-success/15 text-success border-success/40 shadow-[0_8px_30px_-12px_rgba(52,211,153,0.6)]',
   danger:
     'bg-danger/15 text-danger border-danger/40 shadow-[0_8px_30px_-12px_rgba(248,113,113,0.6)]',
+  error:
+    'bg-danger/15 text-danger border-danger/40 shadow-[0_8px_30px_-12px_rgba(248,113,113,0.6)]',
 };
 
 export function Toast() {

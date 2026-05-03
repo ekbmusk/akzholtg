@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: stem-case-bot-backend
+    name: stem-theory-bot-backend
     env: python
     rootDir: backend
     plan: free
@@ -8,14 +8,16 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        value: sqlite:///./stem_case_bot.db
-      - key: TEACHER_TELEGRAM_IDS
+        value: sqlite:///./stem_theory_bot.db
+      - key: AUTHOR_TELEGRAM_IDS
         sync: false
       - key: BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: MINI_APP_URL
+        sync: false
+      - key: INTERNAL_BOT_TOKEN
         sync: false
       - key: GROQ_API_KEY
         sync: false

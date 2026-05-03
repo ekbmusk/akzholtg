@@ -1,18 +1,17 @@
 {
-  "name": "stem-case-bot-frontend",
+  "name": "stem-theory-bot-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 3000",
-    "pages:deploy": "wrangler pages deploy dist --project-name=stem-case-bot"
+    "preview": "vite preview --port 3001",
+    "pages:deploy": "wrangler pages deploy dist --project-name=stem-theory-bot"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
     "axios": "^1.7.7",
-    "canvas-confetti": "^1.9.4",
     "katex": "^0.16.11",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",

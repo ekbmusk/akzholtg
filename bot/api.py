@@ -52,17 +52,14 @@ class BackendClient:
     async def get_user_by_telegram(self, tg_id: int) -> Optional[dict]:
         return await self._get(f"/api/bot/users/by-telegram/{tg_id}")
 
-    async def list_submissions(
-        self, user_id: int, status: Optional[str] = None
-    ) -> list[dict]:
-        data = await self._get(
-            f"/api/bot/users/{user_id}/submissions",
-            **({"status": status} if status else {}),
-        )
-        return data or []
+    async def list_progress(self, user_id: int) -> list[dict]:
+        return await self._get(f"/api/bot/users/{user_id}/progress") or []
 
-    async def list_assigned_cases(self, user_id: int) -> list[dict]:
-        return await self._get(f"/api/bot/users/{user_id}/assigned-cases") or []
+    async def list_favourites(self, user_id: int) -> list[dict]:
+        return await self._get(f"/api/bot/users/{user_id}/favourites") or []
+
+    async def list_featured(self, limit: int = 5) -> list[dict]:
+        return await self._get("/api/bot/lessons/featured", limit=limit) or []
 
     async def pending_notifications(self, limit: int = 50) -> list[dict]:
         return await self._get("/api/bot/notifications/pending", limit=limit) or []

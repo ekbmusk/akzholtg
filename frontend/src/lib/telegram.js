@@ -19,8 +19,8 @@ export function bootstrap() {
   try {
     w.ready();
     w.expand();
-    w.setHeaderColor?.('#0F0F1A');
-    w.setBackgroundColor?.('#0F0F1A');
+    w.setHeaderColor?.('#0B1320');
+    w.setBackgroundColor?.('#0B1320');
   } catch {
     // Older Telegram clients won't have all setters.
   }
@@ -51,7 +51,7 @@ function readDevUser() {
       /* fall through */
     }
   }
-  // Sensible default — can be promoted to teacher via TEACHER_TELEGRAM_IDS=1.
+  // Sensible default — can be promoted to author via AUTHOR_TELEGRAM_IDS=1.
   return { id: 1, first_name: 'Dev', username: 'dev', language_code: 'kk' };
 }
 

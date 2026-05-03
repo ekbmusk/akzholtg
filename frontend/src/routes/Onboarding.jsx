@@ -1,4 +1,4 @@
-import { ArrowRight, Compass, ListChecks, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Heart, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/Button';
@@ -6,19 +6,19 @@ import { useUserStore } from '../store/userStore';
 
 const FEATURES = [
   {
-    icon: Compass,
-    title: 'Шынайы жағдаят',
-    text: 'Әр кейс — нақты ситуация. Оқу — сұрақ қою және оны шешу.',
-  },
-  {
-    icon: ListChecks,
-    title: 'Бағаланатын тапсырмалар',
-    text: 'Сан, мәтін, нұсқа таңдау, файл жүктеу — барлығы тексеріледі.',
+    icon: BookOpen,
+    title: 'Қазақша теория',
+    text: 'STEM пәндері бойынша қысқа, түсінікті сабақтар.',
   },
   {
     icon: Sparkles,
-    title: 'Қажет кезде кеңес',
-    text: 'AI көмекші тура жауап бермейді — бағыт береді.',
+    title: 'Формула, видео, факт',
+    text: 'Әр сабақта KaTeX-формулалар, YouTube және «білдің бе?» каллаут­тары.',
+  },
+  {
+    icon: Heart,
+    title: 'Таңдаулыға сақта',
+    text: 'Жүректі бас — кейін оңай қайта оралу үшін.',
   },
 ];
 
@@ -28,7 +28,7 @@ export default function Onboarding() {
 
   function start() {
     localStorage.setItem('onboarding_completed', '1');
-    navigate(role === 'teacher' ? '/teacher/dashboard' : '/home', {
+    navigate(role === 'author' ? '/author/dashboard' : '/library', {
       replace: true,
     });
   }
@@ -37,13 +37,13 @@ export default function Onboarding() {
     <div className="atmosphere flex min-h-screen flex-col">
       <div className="container-app flex flex-1 flex-col pb-6 pt-12">
         <header className="mb-10 space-y-2">
-          <p className="label-eyebrow">stem · case · bot</p>
-          <h1 className="font-display text-[34px] leading-[1.05] tracking-tightest text-ink">
-            Шынайы кейстер арқылы<br />
-            <span className="text-primary-soft">STEM-ді шеш.</span>
+          <p className="label-eyebrow">stem · theory</p>
+          <h1 className="font-serif text-[34px] leading-[1.05] text-ink">
+            STEM теориясы —<br />
+            <span className="text-primary-soft">оқу күнделігің.</span>
           </h1>
           <p className="text-[14px] text-ink-muted">
-            Физика, математика, инженерия — тек теория емес, қолданбалы есептер.
+            Физика, биология, химия — қысқа сабақтар, тек теория, тапсырмасыз.
           </p>
         </header>
 
@@ -58,7 +58,7 @@ export default function Onboarding() {
                 <Icon size={18} />
               </span>
               <div className="space-y-1">
-                <h3 className="font-display text-[15px] tracking-tight text-ink">{title}</h3>
+                <h3 className="font-serif text-[15px] text-ink">{title}</h3>
                 <p className="text-[13px] leading-relaxed text-ink-muted">{text}</p>
               </div>
             </li>

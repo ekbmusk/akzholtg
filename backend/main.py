@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Load .env from project root before app modules import os.getenv-driven config.
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 logging.basicConfig(
@@ -20,11 +19,11 @@ logging.basicConfig(
 from app.database.database import create_tables  # noqa: E402
 from app.routes import (  # noqa: E402
     ai,
+    author,
     bot,
-    cases,
-    groups,
-    submissions,
-    teacher,
+    favourites,
+    lessons,
+    progress,
     uploads,
     users,
 )
@@ -37,8 +36,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="STEM Case Bot API",
-    description="Backend for the STEM case-based learning Mini App.",
+    title="STEM Theory Bot API",
+    description="Backend for the STEM theory-only learning Mini App.",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -52,10 +51,10 @@ app.add_middleware(
 )
 
 app.include_router(users.router)
-app.include_router(cases.router)
-app.include_router(submissions.router)
-app.include_router(groups.router)
-app.include_router(teacher.router)
+app.include_router(lessons.router)
+app.include_router(progress.router)
+app.include_router(favourites.router)
+app.include_router(author.router)
 app.include_router(ai.router)
 app.include_router(uploads.router)
 app.include_router(bot.router)
@@ -67,13 +66,10 @@ def health():
 
 
 if __name__ == "__main__":
-    # Used by container entrypoint. Reads $PORT directly so we don't depend
-    # on shell expansion in the Dockerfile CMD — Railway / Render / Fly all
-    # inject PORT via env, and exec-form CMDs leave shell vars unexpanded.
     import uvicorn
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
+        port=int(os.getenv("PORT", "8001")),
     )
