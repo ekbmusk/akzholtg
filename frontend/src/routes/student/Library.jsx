@@ -37,12 +37,13 @@ export default function Library() {
   return (
     <div className="space-y-6 pt-4">
       <header className="space-y-2">
-        <p className="label-eyebrow">кітапхана</p>
+        <p className="label-eyebrow">жобалар</p>
         <h1 className="font-serif text-[24px] leading-tight text-ink">
-          Білім — оқыған жерден.
+          Сабаққа дайындал.
         </h1>
         <p className="text-[14px] text-ink-muted">
-          STEM тақырыбында қазақша теориялық сабақтар.
+          Зертханалық жобамен сабақ алдында таныс — не істейміз, не керек,
+          қандай қадамдар бар.
         </p>
       </header>
 
@@ -55,7 +56,7 @@ export default function Library() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Сабақты іздеу…"
+          placeholder="Жобаны іздеу…"
           className="w-full rounded-2xl border border-border bg-surface/60 py-2.5 pl-9 pr-9 text-[14px] text-ink placeholder:text-ink-faint focus:border-primary/50 focus:outline-none"
         />
         {search && (
@@ -111,7 +112,7 @@ export default function Library() {
         <p className="label-eyebrow">
           {activeSubject
             ? subjects.find((s) => s.code === activeSubject)?.title_kk || activeSubject
-            : 'барлық сабақтар'}
+            : 'барлық жобалар'}
           {' · '}
           {lessons.length}
         </p>

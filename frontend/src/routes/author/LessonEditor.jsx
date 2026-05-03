@@ -195,7 +195,7 @@ export default function LessonEditor() {
           <ArrowLeft size={18} />
         </button>
         <h1 className="font-serif text-[16px] text-ink">
-          {id ? 'Сабақты өзгерту' : 'Жаңа сабақ'}
+          {id ? 'Жобаны өзгерту' : 'Жаңа жоба'}
         </h1>
         <button
           type="button"

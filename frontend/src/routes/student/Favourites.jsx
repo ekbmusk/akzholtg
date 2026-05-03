@@ -35,7 +35,7 @@ export default function Favourites() {
       <header className="space-y-2">
         <p className="label-eyebrow">таңдаулы</p>
         <h1 className="font-serif text-[24px] leading-tight text-ink">
-          Сақталған сабақтар
+          Сақталған жобалар
         </h1>
         <p className="text-[14px] text-ink-muted">
           Кейін қайта оралғың келетіндер.
@@ -52,7 +52,7 @@ export default function Favourites() {
         <div className="rounded-2xl border border-border bg-surface/40 p-8 text-center">
           <Heart size={20} className="mx-auto mb-3 text-ink-faint" />
           <p className="text-[13px] text-ink-muted">
-            Әзірге таңдаулы сабақ жоқ. Кітапханадан жүректі бас.
+            Әзірге таңдаулы жоба жоқ. Кітапханадан жүректі бас.
           </p>
         </div>
       ) : (

@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Heart, Sparkles } from 'lucide-react';
+import { ArrowRight, FlaskConical, Heart, ListChecks } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/Button';
@@ -6,19 +6,19 @@ import { useUserStore } from '../store/userStore';
 
 const FEATURES = [
   {
-    icon: BookOpen,
-    title: 'Қазақша теория',
-    text: 'STEM пәндері бойынша қысқа, түсінікті сабақтар.',
+    icon: FlaskConical,
+    title: 'Сабаққа дайындал',
+    text: 'Зертханалық жобаға дейін қандай тәжірибе жасайтыныңды, не өлшейтініңді алдын ала біліп ал.',
   },
   {
-    icon: Sparkles,
-    title: 'Формула, видео, факт',
-    text: 'Әр сабақта KaTeX-формулалар, YouTube және «білдің бе?» каллаут­тары.',
+    icon: ListChecks,
+    title: 'Қадаммен өт',
+    text: 'Әр жоба — нақты қадамдар: мақсат, гипотеза, жабдықтар, эксперимент, нәтиже. Бір қадам — бір экран.',
   },
   {
     icon: Heart,
     title: 'Таңдаулыға сақта',
-    text: 'Жүректі бас — кейін оңай қайта оралу үшін.',
+    text: 'Жүректі бас — кейін оңай қайта оралу үшін, тіпті сабақ кезінде де.',
   },
 ];
 
@@ -37,13 +37,14 @@ export default function Onboarding() {
     <div className="atmosphere flex min-h-screen flex-col">
       <div className="container-app flex flex-1 flex-col pb-6 pt-12">
         <header className="mb-10 space-y-2">
-          <p className="label-eyebrow">stem · theory</p>
+          <p className="label-eyebrow">жобалық оқыту</p>
           <h1 className="font-serif text-[34px] leading-[1.05] text-ink">
-            STEM теориясы —<br />
-            <span className="text-primary-soft">оқу күнделігің.</span>
+            Зертханалық жобалар —<br />
+            <span className="text-primary-soft">сабаққа дейін.</span>
           </h1>
           <p className="text-[14px] text-ink-muted">
-            Физика, биология, химия — қысқа сабақтар, тек теория, тапсырмасыз.
+            Сабаққа кірмес бұрын жобамен танысып ал: не істейміз, не керек,
+            қандай қадамдар бар.
           </p>
         </header>
 

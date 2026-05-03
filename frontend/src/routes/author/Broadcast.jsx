@@ -49,11 +49,11 @@ export default function Broadcast() {
             onChange={(e) => setText(e.target.value)}
             rows={6}
             className="w-full rounded-xl border border-border bg-bg/40 p-3 text-[14px] text-ink focus:border-primary/50 focus:outline-none"
-            placeholder="Жаңа сабақ шықты — оқып көріңдер!"
+            placeholder="Жаңа жоба шықты — танысып көріңдер!"
           />
         </label>
         <label className="block space-y-1">
-          <span className="label-eyebrow">сабақ (қосымша)</span>
+          <span className="label-eyebrow">жоба (қосымша)</span>
           <select
             value={lessonId}
             onChange={(e) => setLessonId(e.target.value)}

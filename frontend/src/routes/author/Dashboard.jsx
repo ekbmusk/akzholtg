@@ -30,7 +30,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3">
         <StatTile
           icon={BookOpen}
-          label="Сабақтар"
+          label="Жобалар"
           value={stats ? stats.published_lessons : '—'}
           sub={stats ? `барлығы ${stats.total_lessons}` : ''}
         />
@@ -85,7 +85,7 @@ export default function Dashboard() {
         to="/author/lessons/new"
         className="block rounded-2xl bg-primary py-3 text-center text-[14px] font-medium text-bg-deep hover:bg-primary-soft"
       >
-        Жаңа сабақ жасау
+        Жаңа жоба жасау
       </Link>
     </div>
   );

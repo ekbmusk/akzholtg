@@ -21,7 +21,7 @@ const studentTabs = [
 
 const authorTabs = [
   { to: '/author/dashboard', label: 'Шолу', icon: LayoutDashboard },
-  { to: '/author/lessons', label: 'Сабақтар', icon: Notebook },
+  { to: '/author/lessons', label: 'Жобалар', icon: Notebook },
   { to: '/author/broadcast', label: 'Хабар', icon: MessageSquare },
 ];
 

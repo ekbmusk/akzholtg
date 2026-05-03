@@ -18,7 +18,7 @@ const ROWS = [
 
 // Non-breaking spaces around the dot keep word-break clean across rows.
 const REP =
-  'STEM · STEM · STEM · STEM · STEM · STEM · STEM · STEM';
+  'ЖОБА · ЗЕРТТЕУ · ТӘЖІРИБЕ · ЖОБА · ЗЕРТТЕУ · ТӘЖІРИБЕ';
 
 function MarqueeRow({ dir, speed, size, opacity, accent }) {
   const animation = `curtain-${dir} ${speed}s linear infinite`;
@@ -76,7 +76,7 @@ export function SplashCurtain({ visible }) {
         )}
       >
         <span className="font-display text-[64px] font-bold tracking-tightest text-ink">
-          STEM
+          ЖОБА
         </span>
       </div>
     );
@@ -116,7 +116,7 @@ export function SplashCurtain({ visible }) {
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        <p className="label-eyebrow">stem · case · bot</p>
+        <p className="label-eyebrow">жобалық оқыту</p>
         <p className="mt-1 font-mono text-[11px] uppercase tracking-ticker text-ink-faint">
           жүктелуде
         </p>

@@ -43,7 +43,7 @@ export default function History() {
           Оқу тарихы
         </h1>
         <p className="text-[14px] text-ink-muted">
-          Барлығы {items.length} сабақ ашылды, {completedCount} аяқталды.
+          Барлығы {items.length} жоба ашылды, {completedCount} аяқталды.
         </p>
       </header>
 
@@ -57,7 +57,7 @@ export default function History() {
         <div className="rounded-2xl border border-border bg-surface/40 p-8 text-center">
           <HistoryIcon size={20} className="mx-auto mb-3 text-ink-faint" />
           <p className="text-[13px] text-ink-muted">
-            Әлі бірде-бір сабақ ашылмаған.
+            Әлі бірде-бір жоба ашылмаған.
           </p>
         </div>
       ) : (

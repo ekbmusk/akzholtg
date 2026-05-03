@@ -45,7 +45,7 @@ export default function LessonList() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Сабақты өшіру керек пе?')) return;
+    if (!confirm('Жобаны өшіру керек пе?')) return;
     try {
       await deleteLesson(id);
       showToast('Өшірілді', 'success');
@@ -59,9 +59,9 @@ export default function LessonList() {
     <div className="space-y-5 pt-4">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <p className="label-eyebrow">сабақтар</p>
+          <p className="label-eyebrow">жобалар</p>
           <h1 className="font-serif text-[22px] leading-tight text-ink">
-            Барлық сабақтар
+            Барлық жобалар
           </h1>
         </div>
         <Link
@@ -81,7 +81,7 @@ export default function LessonList() {
         </div>
       ) : items.length === 0 ? (
         <p className="rounded-2xl border border-border bg-surface/40 p-6 text-center text-[13px] text-ink-muted">
-          Әлі бір сабақ жоқ. Жаңа сабақ жасап көр.
+          Әлі бір жоба жоқ. Жаңа жоба жасап көр.
         </p>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/50">

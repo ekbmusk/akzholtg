@@ -22,7 +22,7 @@ export function shareAchievements(badges) {
   if (!earned.length) return false;
 
   const lines = [
-    `Мен STEM Case Bot-та ${earned.length} жетістікке жеттім:`,
+    `Мен жобалық оқыту қолданбасында ${earned.length} жетістікке жеттім:`,
     ...earned.slice(0, 6).map((b) => `• ${b.kk}`),
   ];
   if (earned.length > 6) lines.push(`...және тағы ${earned.length - 6}`);
@@ -35,7 +35,7 @@ export function shareAchievements(badges) {
 export function shareSingleBadge(badge) {
   if (!badge) return false;
   const text = [
-    `Мен STEM Case Bot-та «${badge.kk}» жетістігін алдым.`,
+    `Мен жобалық оқыту қолданбасында «${badge.kk}» жетістігін алдым.`,
     `Сен де ботты ашып көр: ${BOT_LINK}`,
   ].join('\n');
   openTelegram(tgShareUrl(text));

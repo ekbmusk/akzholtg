@@ -12,6 +12,6 @@ router = Router(name="library")
 @router.message(or_f(Command("library"), F.text == BTN_OPEN_APP))
 async def on_library(message: Message) -> None:
     await message.answer(
-        "Кітапхананы ашамыз — STEM сабақтарын тап, оқы, таңдаулыға қос.",
+        "Кітапхананы ашамыз — зертханалық жобаны тап, сабақ алдында таныс.",
         reply_markup=mini_app_button("Кітапхананы ашу"),
     )

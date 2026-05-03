@@ -40,8 +40,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="STEM Theory Bot API",
-    description="Backend for the STEM theory-only learning Mini App.",
+    title="Жобалық оқыту API",
+    description="Backend for the project-based learning Mini App (lab previews).",
     version="0.1.0",
     lifespan=lifespan,
 )
