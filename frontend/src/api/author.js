@@ -39,6 +39,11 @@ export async function broadcast({ text, lesson_id }) {
   return data;
 }
 
+export async function getLessonProgress(lessonId) {
+  const { data } = await apiClient.get(`/author/lessons/${lessonId}/progress`);
+  return data;
+}
+
 export async function uploadImages(files) {
   const form = new FormData();
   for (const f of files) form.append('files', f);

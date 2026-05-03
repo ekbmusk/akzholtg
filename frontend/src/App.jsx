@@ -9,6 +9,7 @@ import Broadcast from './routes/author/Broadcast';
 import Dashboard from './routes/author/Dashboard';
 import LessonEditor from './routes/author/LessonEditor';
 import LessonList from './routes/author/LessonList';
+import LessonProgress from './routes/author/LessonProgress';
 import Favourites from './routes/student/Favourites';
 import History from './routes/student/History';
 import Lesson from './routes/student/Lesson';
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="lessons" element={<LessonList />} />
           <Route path="lessons/new" element={<LessonEditor />} />
           <Route path="lessons/:id/edit" element={<LessonEditor />} />
+          <Route path="lessons/:id/progress" element={<LessonProgress />} />
           <Route path="broadcast" element={<Broadcast />} />
         </Route>
 

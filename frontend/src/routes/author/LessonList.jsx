@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -102,6 +102,13 @@ export default function LessonList() {
                   {l.estimated_minutes ? ` · ${l.estimated_minutes} мин` : ''}
                 </p>
               </div>
+              <Link
+                to={`/author/lessons/${l.id}/progress`}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-ink-faint transition hover:text-ink"
+                title="Оқушылар прогресі"
+              >
+                <Users size={14} />
+              </Link>
               <button
                 type="button"
                 onClick={() => togglePublished(l)}

@@ -14,6 +14,7 @@ from app.database.database import get_db
 from app.database.models import (
     BroadcastLog,
     Lesson,
+    LessonBlock,
     LessonFavourite,
     LessonProgress,
     User,
@@ -108,6 +109,77 @@ def update(
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return lesson_service.update_lesson(db, lesson, payload)
+
+
+class StudentProgressRow(BaseModel):
+    user_id: int
+    telegram_id: Optional[int]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    username: Optional[str]
+    photo_url: Optional[str]
+    status: str
+    last_block_position: int
+    seconds_spent: int
+    opened_at: Optional[str]
+    completed_at: Optional[str]
+
+
+class LessonProgressOut(BaseModel):
+    lesson_id: int
+    title_kk: str
+    total_blocks: int
+    students: list[StudentProgressRow]
+
+
+@router.get("/lessons/{lesson_id}/progress", response_model=LessonProgressOut)
+def lesson_progress(
+    lesson_id: int,
+    _: User = Depends(require_author),
+    db: Session = Depends(get_db),
+):
+    lesson = lesson_service.get_lesson(db, lesson_id)
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    total_blocks = (
+        db.query(func.count(LessonBlock.id))
+        .filter(LessonBlock.lesson_id == lesson_id)
+        .scalar()
+        or 0
+    )
+
+    rows = (
+        db.query(LessonProgress, User)
+        .join(User, User.id == LessonProgress.user_id)
+        .filter(LessonProgress.lesson_id == lesson_id)
+        .order_by(LessonProgress.updated_at.desc())
+        .all()
+    )
+
+    students = [
+        StudentProgressRow(
+            user_id=u.id,
+            telegram_id=u.telegram_id,
+            first_name=u.first_name,
+            last_name=u.last_name,
+            username=u.username,
+            photo_url=u.photo_url,
+            status=p.status,
+            last_block_position=p.last_block_position,
+            seconds_spent=p.seconds_spent,
+            opened_at=p.opened_at.isoformat() if p.opened_at else None,
+            completed_at=p.completed_at.isoformat() if p.completed_at else None,
+        )
+        for p, u in rows
+    ]
+
+    return LessonProgressOut(
+        lesson_id=lesson_id,
+        title_kk=lesson.title_kk,
+        total_blocks=total_blocks,
+        students=students,
+    )
 
 
 @router.delete("/lessons/{lesson_id}")
