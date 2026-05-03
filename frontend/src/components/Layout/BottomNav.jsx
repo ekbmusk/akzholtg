@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Notebook,
+  Users,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -22,6 +23,7 @@ const studentTabs = [
 const authorTabs = [
   { to: '/author/dashboard', label: 'Шолу', icon: LayoutDashboard },
   { to: '/author/lessons', label: 'Жобалар', icon: Notebook },
+  { to: '/author/students', label: 'Оқушылар', icon: Users },
   { to: '/author/broadcast', label: 'Хабар', icon: MessageSquare },
 ];
 

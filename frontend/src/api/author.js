@@ -44,6 +44,16 @@ export async function getLessonProgress(lessonId) {
   return data;
 }
 
+export async function listStudents() {
+  const { data } = await apiClient.get('/author/students');
+  return data;
+}
+
+export async function getStudent(userId) {
+  const { data } = await apiClient.get(`/author/students/${userId}`);
+  return data;
+}
+
 export async function uploadImages(files) {
   const form = new FormData();
   for (const f of files) form.append('files', f);
