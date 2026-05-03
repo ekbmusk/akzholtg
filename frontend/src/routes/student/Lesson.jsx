@@ -16,6 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { LessonBlock, LessonBlocks } from '../../components/LessonBlocks';
 import { resolveImageUrl } from '../../lib/imageUrl';
 import { cn } from '../../lib/cn';
+import { extractLabMeta } from '../../lib/labMeta';
 import { haptic } from '../../lib/telegram';
 import { useLessonStore } from '../../store/lessonStore';
 import { useUiStore } from '../../store/uiStore';
@@ -141,7 +142,9 @@ function LabWizard({
 
   const startStep = Math.min(progress?.last_block_position || 0, blocks.length);
   const [step, setStep] = useState(startStep);
+  const [started, setStarted] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const meta = useMemo(() => extractLabMeta(blocks), [blocks]);
 
   // Re-sync if a fresh progress payload arrives after first render.
   const synced = useRef(false);
@@ -185,6 +188,24 @@ function LabWizard({
   const isFinalScreen = step >= blocks.length;
   const currentBlock = !isFinalScreen ? blocks[step] : null;
 
+  // Landing screen: shown until the student presses Бастау / Жалғастыру.
+  // Skips automatically if the lesson has no extra meta to display.
+  if (!started) {
+    return (
+      <LabLanding
+        lesson={lesson}
+        meta={meta}
+        progressStep={progress?.last_block_position || 0}
+        totalSteps={totalSteps}
+        isCompleted={isCompleted}
+        onStart={() => {
+          setStarted(true);
+          haptic('medium');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="container-reading">
       <header className="mb-4 space-y-3">
@@ -194,26 +215,6 @@ function LabWizard({
         <h1 className="font-serif text-[26px] leading-tight text-ink">
           {lesson.title_kk}
         </h1>
-        {lesson.cover_image_url && step === 0 && (
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface/40">
-            <img
-              src={resolveImageUrl(lesson.cover_image_url)}
-              alt=""
-              className="block w-full"
-            />
-          </div>
-        )}
-        {step === 0 && lesson.objective_kk && (
-          <p className="text-[14px] text-ink-muted">
-            <span className="text-ink-faint">Мақсаты:</span>{' '}
-            {lesson.objective_kk}
-          </p>
-        )}
-        {step === 0 && lesson.intro_kk && (
-          <p className="font-serif text-[15px] italic leading-relaxed text-ink-muted">
-            {lesson.intro_kk}
-          </p>
-        )}
       </header>
 
       <StepProgress step={step} total={totalSteps} />
@@ -278,6 +279,180 @@ function LabWizard({
         )}
       </nav>
     </div>
+  );
+}
+
+function LabLanding({
+  lesson,
+  meta,
+  progressStep,
+  totalSteps,
+  isCompleted,
+  onStart,
+}) {
+  const resuming = progressStep > 0 && !isCompleted;
+  const grade = meta.passport.find((p) => p.label === 'Сыныбы')?.value;
+  const section = meta.passport.find((p) => p.label === 'Бөлім')?.value;
+  const duration = meta.passport.find((p) => p.label === 'Уақыты')?.value;
+  const projectType = meta.passport.find((p) => p.label === 'Жоба түрі')?.value;
+
+  return (
+    <div className="container-reading space-y-6">
+      <header className="space-y-3">
+        <p className="label-eyebrow">
+          {lesson.subject_code} · зертханалық жұмыс
+        </p>
+        <h1 className="font-serif text-[26px] leading-tight text-ink">
+          {lesson.title_kk}
+        </h1>
+        {lesson.cover_image_url && (
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface/40">
+            <img
+              src={resolveImageUrl(lesson.cover_image_url)}
+              alt=""
+              className="block w-full"
+            />
+          </div>
+        )}
+      </header>
+
+      {(grade || section || duration || projectType) && (
+        <div className="grid grid-cols-2 gap-2 text-[12px]">
+          {grade && (
+            <MetaPill label="Сыныбы" value={grade} />
+          )}
+          {duration && (
+            <MetaPill label="Уақыты" value={duration} />
+          )}
+          {section && (
+            <MetaPill label="Бөлім" value={section} className="col-span-2" />
+          )}
+          {projectType && (
+            <MetaPill label="Жоба түрі" value={projectType} className="col-span-2" />
+          )}
+        </div>
+      )}
+
+      {lesson.objective_kk && (
+        <Section title="Мақсаты">
+          <p className="font-serif text-[15px] leading-relaxed text-ink">
+            {lesson.objective_kk}
+          </p>
+        </Section>
+      )}
+
+      {lesson.intro_kk && (
+        <Section title="Не үшін бұл қызық?">
+          <p className="font-serif text-[15px] italic leading-relaxed text-ink-muted">
+            {lesson.intro_kk}
+          </p>
+        </Section>
+      )}
+
+      {meta.questions.length > 0 && (
+        <Section title="Біз қандай сұрақтарға жауап іздейміз?">
+          <ul className="space-y-1.5 text-[13.5px] text-ink">
+            {meta.questions.slice(0, 4).map((q, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-ink-faint">{i + 1}.</span>
+                <span>{q}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {meta.stages.length > 0 && (
+        <Section title="Сабақта не істейміз?">
+          <ol className="space-y-2 text-[13.5px] text-ink">
+            {meta.stages.map((stage, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-medium text-primary-soft">
+                  {i + 1}
+                </span>
+                <span>{stage}</span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
+
+      {meta.equipment.length > 0 && (
+        <Section title="Не керек болады?">
+          <ul className="grid grid-cols-1 gap-1.5 text-[13.5px] text-ink sm:grid-cols-2">
+            {meta.equipment.map((item, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-ink-faint">·</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {lesson.summary_kk && (
+        <Section title="Сабақ соңында не білеміз?">
+          <p className="font-serif text-[14px] leading-relaxed text-ink-muted">
+            {lesson.summary_kk}
+          </p>
+        </Section>
+      )}
+
+      <div className="sticky bottom-3 pt-2">
+        <button
+          type="button"
+          onClick={onStart}
+          className={cn(
+            'flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[14px] font-medium transition',
+            isCompleted
+              ? 'border border-success/30 bg-success/10 text-success'
+              : 'bg-primary text-bg-deep shadow-lg shadow-primary/20 hover:bg-primary-soft',
+          )}
+        >
+          {isCompleted ? (
+            <>
+              <CheckCircle2 size={16} />
+              Қайта қарау
+            </>
+          ) : resuming ? (
+            <>
+              <ArrowRight size={16} />
+              {progressStep + 1}-қадамнан жалғастыру
+            </>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              Бастау · {totalSteps} қадам
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MetaPill({ label, value, className }) {
+  return (
+    <div
+      className={cn(
+        'flex items-baseline justify-between gap-2 rounded-2xl border border-border bg-surface/50 px-3.5 py-2.5',
+        className,
+      )}
+    >
+      <span className="text-[10px] uppercase tracking-ticker text-ink-faint">
+        {label}
+      </span>
+      <span className="text-right text-[13px] text-ink">{value}</span>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="space-y-2">
+      <p className="label-eyebrow">{title}</p>
+      {children}
+    </section>
   );
 }
 
