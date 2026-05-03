@@ -78,6 +78,7 @@ def create_lesson(db: Session, payload: LessonCreate, author_id: int) -> Lesson:
         objective_kk=payload.objective_kk,
         summary_kk=payload.summary_kk,
         intro_kk=payload.intro_kk,
+        overview_kk=payload.overview_kk,
         cover_image_url=payload.cover_image_url,
         subject_code=payload.subject_code,
         difficulty=payload.difficulty,
@@ -119,9 +120,9 @@ def create_lesson(db: Session, payload: LessonCreate, author_id: int) -> Lesson:
 def update_lesson(db: Session, lesson: Lesson, payload: LessonUpdate) -> Lesson:
     data = payload.model_dump(exclude_unset=True)
     for field in (
-        "title_kk", "objective_kk", "summary_kk", "intro_kk", "cover_image_url",
-        "subject_code", "difficulty", "age_range", "tags", "estimated_minutes",
-        "is_featured",
+        "title_kk", "objective_kk", "summary_kk", "intro_kk", "overview_kk",
+        "cover_image_url", "subject_code", "difficulty", "age_range", "tags",
+        "estimated_minutes", "is_featured",
     ):
         if field in data:
             setattr(lesson, field, data[field])

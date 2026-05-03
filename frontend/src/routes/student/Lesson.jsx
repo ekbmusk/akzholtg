@@ -333,6 +333,17 @@ function LabLanding({
         </div>
       )}
 
+      {lesson.overview_kk && (
+        <section className="rounded-2xl border border-primary/30 bg-primary/[0.07] p-5">
+          <p className="label-eyebrow mb-2 text-primary-soft">
+            Бұл сабақта сен не істейсің?
+          </p>
+          <p className="font-serif text-[15.5px] leading-relaxed text-ink">
+            {lesson.overview_kk}
+          </p>
+        </section>
+      )}
+
       {lesson.objective_kk && (
         <Section title="Мақсаты">
           <p className="font-serif text-[15px] leading-relaxed text-ink">

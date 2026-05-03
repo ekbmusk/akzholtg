@@ -63,6 +63,7 @@ class LessonSummary(BaseModel):
 class LessonFull(LessonSummary):
     objective_kk: Optional[str] = None
     intro_kk: Optional[str] = None
+    overview_kk: Optional[str] = None
     references: Optional[list[LessonReferenceItem]] = None
     blocks: list[LessonBlockOut] = Field(default_factory=list)
     videos: list[LessonVideoOut] = Field(default_factory=list)
@@ -76,6 +77,7 @@ class LessonCreate(BaseModel):
     objective_kk: Optional[str] = None
     summary_kk: Optional[str] = None
     intro_kk: Optional[str] = None
+    overview_kk: Optional[str] = None
     cover_image_url: Optional[str] = None
     subject_code: str
     difficulty: Difficulty = "medium"
@@ -93,6 +95,7 @@ class LessonUpdate(BaseModel):
     objective_kk: Optional[str] = None
     summary_kk: Optional[str] = None
     intro_kk: Optional[str] = None
+    overview_kk: Optional[str] = None
     cover_image_url: Optional[str] = None
     subject_code: Optional[str] = None
     difficulty: Optional[Difficulty] = None

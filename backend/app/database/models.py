@@ -57,6 +57,9 @@ class Lesson(Base):
     objective_kk = Column(Text, nullable=True)
     summary_kk = Column(Text, nullable=True)
     intro_kk = Column(Text, nullable=True)
+    # Human-readable "what you'll do this lesson" preview shown on the
+    # student-facing landing screen before the wizard starts.
+    overview_kk = Column(Text, nullable=True)
     cover_image_url = Column(String(1000), nullable=True)
     subject_code = Column(String(50), nullable=False, index=True)
     difficulty = Column(String(20), nullable=False, default="medium")

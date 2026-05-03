@@ -75,6 +75,28 @@ def _migrate_sqlite() -> None:
             conn.execute(text(f'ALTER TABLE {table} ADD COLUMN "{column}" {ddl}'))
 
 
+# Universal lightweight migrations — run on every dialect (no defaults, just
+# nullable columns). Postgres and SQLite (>= 3.35) both accept the same
+# `ALTER TABLE ... ADD COLUMN <name> <type>` form.
+_UNIVERSAL_MIGRATIONS: list[tuple[str, str, str]] = [
+    ("lessons", "overview_kk", "TEXT"),
+]
+
+
+def _migrate_universal() -> None:
+    inspector = inspect(engine)
+    table_names = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table, column, ddl in _UNIVERSAL_MIGRATIONS:
+            if table not in table_names:
+                continue
+            cols = {c["name"] for c in inspector.get_columns(table)}
+            if column in cols:
+                continue
+            logger.info("Migrating %s: adding column %s", table, column)
+            conn.execute(text(f'ALTER TABLE {table} ADD COLUMN "{column}" {ddl}'))
+
+
 # --- seeds ------------------------------------------------------------------
 
 _DEFAULT_SUBJECTS = [
@@ -112,17 +134,26 @@ def _seed_lessons(db: Session, path: Path = _SEED_PATH) -> None:
     with path.open("r", encoding="utf-8") as f:
         raw = json.load(f)
 
-    existing_titles = {l.title_kk for l in db.query(Lesson).all()}
+    existing_by_title = {l.title_kk: l for l in db.query(Lesson).all()}
     inserted = 0
+    backfilled = 0
 
     for entry in raw:
-        if entry["title_kk"] in existing_titles:
+        existing = existing_by_title.get(entry["title_kk"])
+        if existing:
+            # Backfill fields that were added after the lesson was first seeded
+            # (e.g. overview_kk introduced later). Keep author edits intact —
+            # only fill blanks.
+            if not existing.overview_kk and entry.get("overview_kk"):
+                existing.overview_kk = entry["overview_kk"]
+                backfilled += 1
             continue
         lesson = Lesson(
             title_kk=entry["title_kk"],
             objective_kk=entry.get("objective_kk"),
             summary_kk=entry.get("summary_kk"),
             intro_kk=entry.get("intro_kk"),
+            overview_kk=entry.get("overview_kk"),
             cover_image_url=entry.get("cover_image_url"),
             subject_code=entry["subject_code"],
             difficulty=entry.get("difficulty", "medium"),
@@ -161,14 +192,17 @@ def _seed_lessons(db: Session, path: Path = _SEED_PATH) -> None:
 
         inserted += 1
 
-    if inserted:
+    if inserted or backfilled:
         db.commit()
-        logger.info("Lessons seed: inserted=%d", inserted)
+        logger.info(
+            "Lessons seed: inserted=%d, backfilled=%d", inserted, backfilled
+        )
 
 
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
     _migrate_sqlite()
+    _migrate_universal()
     with SessionLocal() as db:
         _seed_subjects(db)
         _seed_lessons(db)
