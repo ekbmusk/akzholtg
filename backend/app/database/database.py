@@ -112,6 +112,32 @@ _DEFAULT_SUBJECTS = [
 ]
 
 
+# Theory-only baseline lessons that shipped with the very first seed,
+# before the project pivoted to lab-only previews. Removing them by exact
+# title; the safety guard skips any record carrying the 'lab' tag so
+# author-created content can never be touched.
+_LEGACY_LESSON_TITLES = (
+    "Жарық дегеніміз не?",
+    "ДНҚ молекуласы",
+    "Ньютонның үшінші заңы",
+)
+
+
+def _purge_legacy_lessons(db: Session) -> None:
+    purged = 0
+    for title in _LEGACY_LESSON_TITLES:
+        lesson = db.query(Lesson).filter_by(title_kk=title).first()
+        if not lesson:
+            continue
+        if "lab" in (lesson.tags or []):
+            continue
+        db.delete(lesson)
+        purged += 1
+    if purged:
+        db.commit()
+        logger.info("Purged %d legacy baseline lessons", purged)
+
+
 def _seed_subjects(db: Session) -> None:
     if db.query(Subject).count() > 0:
         return
@@ -205,6 +231,7 @@ def create_tables() -> None:
     _migrate_universal()
     with SessionLocal() as db:
         _seed_subjects(db)
+        _purge_legacy_lessons(db)
         _seed_lessons(db)
     # Local import to avoid a circular dependency at module import time.
     from app.services.upload_service import seed_bundled_images
