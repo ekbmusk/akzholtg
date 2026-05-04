@@ -14,12 +14,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { LessonBlock, LessonBlocks } from '../../components/LessonBlocks';
+import { Skeleton, SkeletonCard } from '../../components/ui/Skeleton';
+import { useReducedMotion } from '../../lib/animation';
 import { resolveImageUrl } from '../../lib/imageUrl';
 import { cn } from '../../lib/cn';
 import { extractLabMeta } from '../../lib/labMeta';
 import { haptic } from '../../lib/telegram';
 import { useLessonStore } from '../../store/lessonStore';
 import { useUiStore } from '../../store/uiStore';
+
+const SWIPE_HINT_KEY = 'lab_swipe_hint_seen';
 
 export default function Lesson() {
   const { id } = useParams();
@@ -45,8 +49,12 @@ export default function Lesson() {
 
   if (!lesson) {
     return (
-      <div className="flex justify-center pt-16">
-        <Loader2 className="animate-spin text-ink-muted" size={20} />
+      <div className="container-reading space-y-4 pt-8">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-7 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }
@@ -67,7 +75,7 @@ export default function Lesson() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-1">
-            {!isLab && <FontMenu size={fontSize} setSize={setFontSize} />}
+            <FontMenu size={fontSize} setSize={setFontSize} />
             <button
               type="button"
               onClick={toggleFocus}
@@ -137,13 +145,22 @@ function LabWizard({
   markComplete,
   showToast,
 }) {
+  const focusMode = useUiStore((s) => s.focusMode);
+  const reducedMotion = useReducedMotion();
+
   const blocks = lesson.blocks || [];
   const totalSteps = blocks.length + 1; // +1 = final summary screen
 
   const startStep = Math.min(progress?.last_block_position || 0, blocks.length);
   const [step, setStep] = useState(startStep);
+  const [dir, setDir] = useState(1); // 1 = forward, -1 = back
   const [started, setStarted] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      !window.localStorage.getItem(SWIPE_HINT_KEY),
+  );
   const meta = useMemo(() => extractLabMeta(blocks), [blocks]);
 
   // Re-sync if a fresh progress payload arrives after first render.
@@ -155,20 +172,57 @@ function LabWizard({
     }
   }, [progress?.last_block_position, blocks.length]);
 
+  const dismissSwipeHint = () => {
+    if (!showSwipeHint) return;
+    setShowSwipeHint(false);
+    try {
+      window.localStorage.setItem(SWIPE_HINT_KEY, '1');
+    } catch {
+      /* SSR / private mode — no-op */
+    }
+  };
+
   const goNext = () => {
-    const next = Math.min(step + 1, totalSteps - 1);
-    setStep(next);
+    if (step >= totalSteps - 1) return;
+    setDir(1);
+    setStep(step + 1);
     haptic('light');
+    dismissSwipeHint();
     // Persist the position the student reached. Cap at last real block.
     pushProgress({
-      lastBlockPosition: Math.min(next, Math.max(blocks.length - 1, 0)),
+      lastBlockPosition: Math.min(step + 1, Math.max(blocks.length - 1, 0)),
       secondsSpent: 30,
     }).catch(() => {});
   };
 
   const goPrev = () => {
-    setStep(Math.max(0, step - 1));
+    if (step <= 0) return;
+    setDir(-1);
+    setStep(step - 1);
     haptic('light');
+    dismissSwipeHint();
+  };
+
+  // Touch-driven swipe nav. Mobile-only — no pointer/mouse parity needed
+  // inside Telegram WebView. Axis-locks so vertical scroll never triggers
+  // a step change.
+  const touchStart = useRef(null);
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onTouchEnd = (e) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60) return;
+    if (Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    if (Date.now() - start.t > 600) return; // ignore lazy gestures
+    if (dx < 0) goNext();
+    else goPrev();
   };
 
   const handleComplete = async () => {
@@ -207,7 +261,11 @@ function LabWizard({
   }
 
   return (
-    <div className="container-reading">
+    <div
+      className={cn('container-reading', focusMode && 'mx-auto max-w-[680px]')}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <header className="mb-4 space-y-3">
         <p className="label-eyebrow">
           {lesson.subject_code} · зертханалық жұмыс
@@ -219,7 +277,21 @@ function LabWizard({
 
       <StepProgress step={step} total={totalSteps} />
 
-      <section className="mt-6 min-h-[220px]">
+      {showSwipeHint && step === 0 && (
+        <p className="mt-2 animate-fade-in text-[11px] text-ink-faint">
+          Сипап ауыстыруға болады →
+        </p>
+      )}
+
+      <section
+        key={step}
+        className={cn(
+          'mt-6 min-h-[220px]',
+          !reducedMotion &&
+            (dir === 1 ? 'animate-slide-from-right' : 'animate-slide-from-left'),
+          reducedMotion && 'animate-fade-in',
+        )}
+      >
         {isFinalScreen ? (
           <FinalScreen lesson={lesson} />
         ) : (
@@ -227,16 +299,16 @@ function LabWizard({
         )}
       </section>
 
-      <nav className="mt-8 flex items-center justify-between gap-3">
+      <nav className="sticky bottom-3 z-10 mt-8 flex items-center justify-between gap-3 rounded-full border border-border bg-bg/85 px-2 py-2 backdrop-blur-md">
         <button
           type="button"
           onClick={goPrev}
           disabled={step === 0}
           className={cn(
-            'inline-flex items-center gap-2 rounded-full border border-border bg-surface/40 px-4 py-2.5 text-[13px] transition',
+            'inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] transition',
             step === 0
-              ? 'cursor-not-allowed opacity-40'
-              : 'text-ink hover:border-border-strong hover:bg-surface',
+              ? 'cursor-not-allowed text-ink-faint opacity-40'
+              : 'text-ink hover:bg-surface',
           )}
         >
           <ArrowLeft size={14} />

@@ -1,23 +1,37 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from './components/Layout/AppShell';
+import { SkeletonCard } from './components/ui/Skeleton';
 import { bootstrap } from './lib/telegram';
-import Onboarding from './routes/Onboarding';
-import Broadcast from './routes/author/Broadcast';
-import Dashboard from './routes/author/Dashboard';
-import LessonEditor from './routes/author/LessonEditor';
-import LessonList from './routes/author/LessonList';
-import LessonProgress from './routes/author/LessonProgress';
-import StudentDetail from './routes/author/StudentDetail';
-import Students from './routes/author/Students';
 import Favourites from './routes/student/Favourites';
 import History from './routes/student/History';
 import Lesson from './routes/student/Lesson';
 import Library from './routes/student/Library';
 import { useUiStore } from './store/uiStore';
 import { useUserStore } from './store/userStore';
+
+// Author screens and Onboarding are not on the student hot path — split
+// them out so the lab landing page doesn't drag in recharts, the editor's
+// drag-and-drop deps, etc.
+const Onboarding = lazy(() => import('./routes/Onboarding'));
+const Broadcast = lazy(() => import('./routes/author/Broadcast'));
+const Dashboard = lazy(() => import('./routes/author/Dashboard'));
+const LessonEditor = lazy(() => import('./routes/author/LessonEditor'));
+const LessonList = lazy(() => import('./routes/author/LessonList'));
+const LessonProgress = lazy(() => import('./routes/author/LessonProgress'));
+const StudentDetail = lazy(() => import('./routes/author/StudentDetail'));
+const Students = lazy(() => import('./routes/author/Students'));
+
+function LazyFallback() {
+  return (
+    <div className="space-y-3 pt-4">
+      <SkeletonCard />
+      <SkeletonCard />
+    </div>
+  );
+}
 
 export default function App() {
   const role = useUserStore((s) => s.role);
@@ -60,9 +74,11 @@ export default function App() {
 
   if (!onboarded) {
     return (
-      <Routes>
-        <Route path="*" element={<Onboarding />} />
-      </Routes>
+      <Suspense fallback={<LazyFallback />}>
+        <Routes>
+          <Route path="*" element={<Onboarding />} />
+        </Routes>
+      </Suspense>
     );
   }
 
@@ -79,14 +95,21 @@ export default function App() {
           }
         />
 
-        {/* Student */}
+        {/* Student — eager, hot path */}
         <Route path="library" element={<Library />} />
         <Route path="lesson/:id" element={<Lesson />} />
         <Route path="favourites" element={<Favourites />} />
         <Route path="history" element={<History />} />
 
-        {/* Author */}
-        <Route path="author">
+        {/* Author — lazy, never loaded for students */}
+        <Route
+          path="author"
+          element={
+            <Suspense fallback={<LazyFallback />}>
+              <AuthorOutlet />
+            </Suspense>
+          }
+        >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="lessons" element={<LessonList />} />
@@ -102,4 +125,9 @@ export default function App() {
       </Route>
     </Routes>
   );
+}
+
+// Nested-route parent that hangs Suspense over the author tree.
+function AuthorOutlet() {
+  return <Outlet />;
 }

@@ -2,6 +2,7 @@ import { Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { LessonCard } from '../../components/LessonCard';
+import { SkeletonCard } from '../../components/ui/Skeleton';
 import { cn } from '../../lib/cn';
 import { useLessonStore } from '../../store/lessonStore';
 
@@ -30,6 +31,7 @@ export default function Library() {
   }, [activeSubject, search, loadCatalogue]);
 
   const key = `${activeSubject ?? '__all__'}|${search ?? ''}`;
+  const isLoaded = key in catalogueByKey;
   const lessons = catalogueByKey[key] || [];
 
   const showFeatured = !activeSubject && !search && featured.length > 0;
@@ -116,7 +118,13 @@ export default function Library() {
           {' · '}
           {lessons.length}
         </p>
-        {lessons.length === 0 ? (
+        {!isLoaded ? (
+          <div className="grid gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : lessons.length === 0 ? (
           <p className="rounded-2xl border border-border bg-surface/40 p-6 text-center text-[13px] text-ink-muted">
             Ештеңе табылмады.
           </p>
