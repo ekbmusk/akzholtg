@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 BlockType = Literal[
-    "text", "formula", "image", "video", "fact", "quote", "divider"
+    "text", "formula", "image", "video", "fact", "quote", "divider", "question"
 ]
 Difficulty = Literal["easy", "medium", "hard"]
 VideoProvider = Literal["youtube", "mp4"]

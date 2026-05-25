@@ -1,4 +1,4 @@
-import { Quote } from 'lucide-react';
+import { HelpCircle, Quote } from 'lucide-react';
 
 import { resolveImageUrl } from '../lib/imageUrl';
 import { FormulaRenderer } from './FormulaRenderer';
@@ -93,6 +93,29 @@ function DividerBlock() {
   );
 }
 
+function QuestionBlock({ payload }) {
+  const items = Array.isArray(payload.questions_kk)
+    ? payload.questions_kk.filter((q) => typeof q === 'string' && q.trim())
+    : [];
+  if (!items.length) return null;
+  const title = payload.title_kk?.trim() || 'Ойлан';
+  return (
+    <aside className="question-block">
+      <header className="mb-3 flex items-center gap-2 text-primary">
+        <HelpCircle size={16} />
+        <span className="text-[12px] font-medium uppercase tracking-ticker">
+          {title}
+        </span>
+      </header>
+      <ol className="list-decimal space-y-2 pl-5 marker:text-primary/70">
+        {items.map((q, i) => (
+          <li key={i} className="text-ink">{q}</li>
+        ))}
+      </ol>
+    </aside>
+  );
+}
+
 const RENDERERS = {
   text: TextBlock,
   formula: FormulaBlock,
@@ -101,6 +124,7 @@ const RENDERERS = {
   fact: FactBlock,
   quote: QuoteBlock,
   divider: DividerBlock,
+  question: QuestionBlock,
 };
 
 export function LessonBlock({ block, registerRef }) {

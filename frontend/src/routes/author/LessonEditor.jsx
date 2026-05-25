@@ -2,6 +2,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import {
   ArrowLeft,
   GripVertical,
+  HelpCircle,
   Image as ImageIcon,
   Plus,
   Quote,
@@ -39,6 +40,12 @@ const BLOCK_TYPES = [
   { type: 'fact', label: 'Факт', icon: Sparkles, default: { text_kk: '', icon: '💡' } },
   { type: 'quote', label: 'Дәйексөз', icon: Quote, default: { text_kk: '', author_kk: '' } },
   { type: 'divider', label: 'Бөлгіш', icon: Sparkles, default: {} },
+  {
+    type: 'question',
+    label: 'Сұрақтар',
+    icon: HelpCircle,
+    default: { title_kk: 'Ойлан', questions_kk: [''] },
+  },
 ];
 
 const EMPTY = {
@@ -559,6 +566,59 @@ function BlockEditor({ block, onChange }) {
       );
     case 'divider':
       return <p className="text-[12px] text-ink-faint">Бөлгіш — қосымша баптау жоқ.</p>;
+    case 'question': {
+      const questions = Array.isArray(p.questions_kk) ? p.questions_kk : [''];
+      const setQuestions = (next) => onChange({ questions_kk: next });
+      return (
+        <>
+          <input
+            value={p.title_kk ?? 'Ойлан'}
+            onChange={(e) => onChange({ title_kk: e.target.value })}
+            className="form-input"
+            placeholder="Тақырыпша (мысалы: Ойлан)"
+          />
+          <div className="space-y-2">
+            {questions.map((q, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="mt-2 w-5 shrink-0 text-right font-mono text-[11px] text-ink-faint">
+                  {i + 1}.
+                </span>
+                <textarea
+                  value={q}
+                  onChange={(e) => {
+                    const next = [...questions];
+                    next[i] = e.target.value;
+                    setQuestions(next);
+                  }}
+                  className="form-input min-h-[50px] flex-1"
+                  rows={2}
+                  placeholder="Сұрақ мәтіні…"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = questions.filter((_, j) => j !== i);
+                    setQuestions(next.length ? next : ['']);
+                  }}
+                  className="mt-2 text-ink-faint hover:text-danger"
+                  aria-label="Сұрақты өшіру"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setQuestions([...questions, ''])}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2/40 px-3 py-1 text-[12px] text-ink-muted hover:text-ink"
+            >
+              <Plus size={12} />
+              Сұрақ қосу
+            </button>
+          </div>
+        </>
+      );
+    }
     default:
       return null;
   }

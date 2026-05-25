@@ -78,6 +78,9 @@
   .quote-block {
     @apply border-l-2 border-primary/60 pl-4 italic text-ink-muted;
   }
+  .question-block {
+    @apply rounded-2xl border border-primary/25 bg-primary/[0.05] p-4 text-[15px] leading-relaxed;
+  }
 }
 
 .katex {

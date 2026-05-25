@@ -24,7 +24,7 @@ A lesson (сабақ) has:
 **One Mini App** serves two roles, gated by Telegram user ID:
 
 - **Student** (оқушы) — browses the lesson library by subject / difficulty / tag, opens a lesson, reads through blocks, watches videos, marks lesson as completed (or it auto-marks after scrolling to the end). Can favourite lessons and view their reading history.
-- **Author / mentor** (автор / мұғалім) — same Mini App, recognised server-side via `AUTHOR_TELEGRAM_IDS`. Unlocks: lesson authoring with a block editor (text / formula / image / video / fact / quote / divider), library curation, simple analytics (views per lesson, top readers), broadcast composer.
+- **Author / mentor** (автор / мұғалім) — same Mini App, recognised server-side via `AUTHOR_TELEGRAM_IDS`. Unlocks: lesson authoring with a block editor (text / formula / image / video / fact / quote / divider / question), library curation, simple analytics (views per lesson, top readers), broadcast composer.
 
 There is **no separate web app**. Role detection happens server-side; the frontend renders student or author screens from the same React app.
 
@@ -36,7 +36,7 @@ There is **no separate web app**. Role detection happens server-side; the fronte
 | Student output | Submits answers, gets graded | Reads, marks complete, favourites |
 | Teacher work | Authors cases, grades submissions | Authors lessons, watches view stats |
 | Server tables | `STEMCase`, `CaseTask`, `CaseSubmission`, `TaskAnswer` | `Lesson`, `LessonBlock`, `LessonProgress`, `LessonFavourite` |
-| Block types | text/formula/image/video/equipment/safety/divider/**task** | text/formula/image/video/**fact**/**quote**/divider |
+| Block types | text/formula/image/video/equipment/safety/divider/**task** | text/formula/image/video/**fact**/**quote**/divider/**question** (open reflection prompts, not graded) |
 | AI usage | Hints for tasks, concept explanations | Concept explanations, lesson summarisation on demand |
 | Visual identity | Dark purple (#0F0F1A / #6C63FF), case-driven, dense | Lighter editorial feel: warm dark teal (#0B1320 / #1E2A3A) with accent #14B8A6, reading-optimised typography, generous whitespace |
 
@@ -83,7 +83,7 @@ cd frontend && npm run build && npm run pages:deploy
   - `User` (role: student | author) with `progress`, `favourites` cascade.
   - `Subject` — taxonomy (`code`, `title_kk`, `icon`, `color`).
   - `Lesson` — top-level lesson record. Fields: `title_kk`, `objective_kk`, `summary_kk`, `intro_kk`, `cover_image_url`, `subject_code`, `difficulty` (`easy`|`medium`|`hard`), `age_range`, `tags` (JSON list), `references` (JSON list of `{title, url}`), `estimated_minutes`, `is_published` (defaults to `True` — drafts are explicit, not implicit), `is_featured` (drives `/lessons/featured`), `published_at`, `author_id`.
-  - `LessonBlock` — ordered rich content blocks per lesson. Block types: `text` | `formula` | `image` | `video` | `fact` | `quote` | `divider`. Editor reorders via drag-and-drop.
+  - `LessonBlock` — ordered rich content blocks per lesson. Block types: `text` | `formula` | `image` | `video` | `fact` | `quote` | `divider` | `question`. Editor reorders via drag-and-drop.
   - `LessonVideo` — denormalised video pointers for the catalogue. Fields: `provider` (`youtube` | `mp4`), `external_id_or_url`, `title_kk`, `duration_sec`, `position`. Either embedded inline as a `video` block or surfaced as a top-level video count on the lesson card.
   - `LessonProgress` — per-user, per-lesson reading state. Fields: `user_id`, `lesson_id`, `status` (`opened` | `in_progress` | `completed`), `last_block_position`, `opened_at`, `completed_at`, `seconds_spent`.
   - `LessonFavourite` — bookmark (`user_id`, `lesson_id`, `created_at`).
@@ -111,7 +111,7 @@ cd frontend && npm run build && npm run pages:deploy
 - **Author views** (under `src/routes/author/`):
   - `Dashboard.jsx` — Recharts: views over time, top lessons, completion funnel.
   - `LessonList.jsx` — table of all lessons (draft / published), inline publish toggle.
-  - `LessonEditor.jsx` — drag-and-drop block editor (hello-pangea/dnd) with live KaTeX preview, inline YouTube preview, image upload. Block types: text, formula, image, video, fact, quote, divider.
+  - `LessonEditor.jsx` — drag-and-drop block editor (hello-pangea/dnd) with live KaTeX preview, inline YouTube preview, image upload. Block types: text, formula, image, video, fact, quote, divider, question.
   - `Broadcast.jsx` — composer (optionally attach a lesson link) → bot sends to all students or a filtered subset.
 - **Authorization**: the frontend hides author routes for students, but the real gate is the backend `require_author` dependency. Don't rely on UI hiding alone.
 - **FormulaRenderer** (`src/components/FormulaRenderer.jsx`): KaTeX-backed, parses mixed text + LaTeX. Reused from `stem-bot` patterns.
@@ -156,6 +156,7 @@ Lessons categorised primarily by **subject**, secondarily by **difficulty** and 
 | `fact` | `{ "text_kk": "...", "icon": "💡" }` | Amber-tinted callout card |
 | `quote` | `{ "text_kk": "...", "author_kk": "..." }` | Italic block quote with author |
 | `divider` | `{}` | Thin horizontal rule |
+| `question` | `{ "title_kk": "Ойлан", "questions_kk": ["...", "..."] }` | Primary-tinted callout with numbered open-ended reflection prompts (no answers, no grading) |
 
 ### Video conventions
 
